@@ -22,9 +22,9 @@ st.title("🎬 Семантический поиск фильмов")
 st.markdown("Введите запрос, и я подберу подходящие фильмы с юмором 🤓✨")
 
 # --- Загрузка эмбеддингов и Faiss ---
-embeddings = np.load("movie_embeds.npy")
-meta = joblib.load("movie_meta.pkl")
-index = faiss.read_index("faiss_index.bin")
+embeddings = np.load("data/movie_embeds.npy")
+meta = joblib.load("data/movie_meta.pkl")
+index = faiss.read_index("data/faiss_index.bin")
 
 dim = embeddings.shape[1]
 
