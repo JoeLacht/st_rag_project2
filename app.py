@@ -49,9 +49,9 @@ def safe_split(s, sep=' '):
 # создаём словарь для SymSpell
 vocab = set()
 for m in meta:
-    for w in safe_split(m.get("movie_title")):
+    for w in safe_split(m.get("title_ru")):
         vocab.add(w.lower())
-    for w in safe_split(m.get("categories"), sep=','):
+    for w in safe_split(m.get("genres"), sep=','):
         vocab.add(w.lower())
 
 # загружаем в symspell
@@ -90,9 +90,9 @@ def search(query, top_k_faiss=50, top_k_return=10, apply_symspell=True):
     candidates = []
     for idx in candidate_idxs:
         if idx < 0: continue
-        candidates.append((meta[idx]['movie_title'], idx))
+        candidates.append((meta[idx]['title_ru'], idx))
 
-    cross_inputs = [[q0, meta[idx]['description']] for _, idx in candidates]
+    cross_inputs = [[q0, meta[idx]['overview_ru']] for _, idx in candidates]
     rerank_scores = cross_encoder.predict(cross_inputs)
 
     ranked = sorted(zip([idx for _, idx in candidates], rerank_scores), key=lambda x: x[1], reverse=True)
@@ -104,14 +104,14 @@ def search(query, top_k_faiss=50, top_k_return=10, apply_symspell=True):
         results.append({
             'score': float(score),
             'idx': idx,
-            'movie_title': m.get('movie_title'),
-            'release_date': m.get('release_date'),
-            'page_url': m.get('page_url'),
-            'image_url': m.get('image_url'),
+            'title_ru': m.get('title_ru'),
+            'meta.year': m.get('meta.year'),
+            'meta.tmdb_id': m.get('meta.tmdb_id'),
+            'meta.poster_url': m.get('meta.poster_url'),
             'directors': m.get('directors'),
-            'actors': m.get('actors'),
-            'genres': m.get('categories'),
-            'description': m.get('description')
+            'actors_main': m.get('actors_main'),
+            'genres': m.get('genres'),
+            'overview_ru': m.get('overview_ru')
         })
     return results
 
@@ -147,7 +147,7 @@ SYSTEM_PROMPT = """Ты кинокритик с многолетним опыт�
 def build_rag_context(results, user_query, max_chars=1800):
     parts = []
     for r in results:
-        s = f"Title: {r['movie_title']} ({r.get('release_date','')})\nGenres: {r.get('genres','')}\nDescription: {r.get('description')[:200]}\nURL: {r.get('page_url')}\n"
+        s = f"Title: {r['title_ru']} ({r.get('meta.year','')})\nGenres: {r.get('genres','')}\nDescription: {r.get('overview_ru')[:200]}\nURL: {r.get('meta.tmdb_id')}\n"
         parts.append(s)
     context = "\n\n".join(parts)
     if len(context) > max_chars:
@@ -186,14 +186,14 @@ if st.button("Найти 🎯") and query.strip():
         for r in results:
             col1, col2 = st.columns([1,3])
             with col1:
-                if r.get('image_url'):
-                    st.image(r["image_url"], use_container_width=True)
+                if r.get('meta.poster_url'):
+                    st.image(r["meta.poster_url"], use_container_width=True)
             with col2:
-                st.markdown(f"### [{r.get('movie_title','Не указано')}]({r.get('page_url','#')})")
+                st.markdown(f"### [{r.get('title_ru','Не указано')}]({r.get('meta.poster_url','#')})")
                 st.markdown(f"**Жанры:** {r.get('genres','Не указано')}")
                 st.markdown(f"**Режиссер:** {r.get('directors','Не указано')}")
-                st.markdown(f"**Актёры:** {r.get('actors','Не указано')}")
-                st.markdown(f"**Год:** {r.get('release_date','Не указано')}")
-                st.markdown(f"**Ссылка на фильм:** {r.get('page_url','Не указано')}")
-                st.markdown(f"**Описание:** {r.get('description')}...")
+                st.markdown(f"**Актёры:** {r.get('actors_main','Не указано')}")
+                st.markdown(f"**Год:** {r.get('meta.year','Не указано')}")
+                st.markdown(f"**Ссылка на фильм:** {r.get('meta.tmdb_id','Не указано')}")
+                st.markdown(f"**Описание:** {r.get('overview_ru')}...")
             st.markdown("---")
