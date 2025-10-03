@@ -194,6 +194,7 @@ if st.button("Найти 🎯") and query.strip():
                 st.markdown(f"**Режиссер:** {r.get('directors','Не указано')}")
                 st.markdown(f"**Актёры:** {r.get('actors_main','Не указано')}")
                 st.markdown(f"**Год:** {r.get('meta.year','Не указано')}")
-                st.markdown(f"**Ссылка на фильм:** {r.get('meta.tmdb_id','Не указано')}")
+                movie_url = r.get('meta.tmdb_id', '#')
+                st.markdown(f"**[Ссылка на фильм]({movie_url})**")
                 st.markdown(f"**Описание:** {r.get('overview_ru')}...")
             st.markdown("---")
